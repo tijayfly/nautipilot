@@ -94,14 +94,14 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                     {
                                 // I'm the captain now
 
-                                if (gps.gpsDev <= -0.05f) {
+                                if (gps.gpsDev <= -0.01f) {
                                     ru.rudderInput = -0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
                                     hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                                 }
 
-                                else if (gps.gpsDev >= 0.05f) {
+                                else if (gps.gpsDev >= 0.01f) {
                                     ru.rudderInput = 0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
