@@ -71,7 +71,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
 
                 case REQUEST_GPS:
                 {
-                    // Read the desired course to steer
+                    // Read the desired bearing
                     structGpsDev* pS = (structGpsDev*)&pObjData->dwData;
                     gps.gpsDev = pS->gpsDev;
                     printf("\nDesired bearing = %2.1f", pS->gpsDev);
@@ -111,7 +111,6 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                     {
                                 // I'm the captain now
                                 if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0) {
-                                //if (gps.gpsDev < hdg.Hdg) {
                                     ru.rudderInput = -0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
