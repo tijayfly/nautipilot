@@ -2,7 +2,7 @@
 ## Autopilot for MSFS Boats & Ships
 
 ### Description
-A SimConnect application which enables automatic navigation for seafaring vessels in MSFS. It constantly measures the deviation between TRK and DTK, then makes automatic rudder inputs as required to stay on course.
+A SimConnect application which enables automatic navigation for seafaring vessels in MSFS. It constantly measures the deviation between TRK and BRG, then makes automatic rudder inputs as required to stay on course.
 
 ### Download and Operation
 Download the latest release from this page, then follow the README inside. TLDR it's super simple, just extract and run.

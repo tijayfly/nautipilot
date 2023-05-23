@@ -8,6 +8,7 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <strsafe.h>
+#include <cmath>
 
 #include "SimConnect.h"
 
@@ -20,11 +21,11 @@ static enum EVENT_ID {
 };
 
 static enum DATA_DEFINE_ID {
-    DEFINITION_RUDDER, DEFINITION_GPS
+    DEFINITION_RUDDER, DEFINITION_GPS, DEFINITION_HDG
 };
 
 static enum DATA_REQUEST_ID {
-    REQUEST_RUDDER, REQUEST_GPS
+    REQUEST_RUDDER, REQUEST_GPS, REQUEST_HDG
 };
 
 struct structRudderInput
@@ -40,6 +41,13 @@ struct structGpsDev
 };
 
 structGpsDev		gps;
+
+struct structHdg
+{
+    double Hdg;
+};
+
+structHdg		hdg;
 
 void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pContext)
 {
@@ -63,10 +71,18 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
 
                 case REQUEST_GPS:
                 {
-                    // Read the received GPS deviation
+                    // Read the desired course to steer
                     structGpsDev* pS = (structGpsDev*)&pObjData->dwData;
                     gps.gpsDev = pS->gpsDev;
-                    printf("\nGPS deviation = %2.1f", pS->gpsDev);
+                    printf("\nDesired bearing = %2.1f", pS->gpsDev);
+                }
+
+                case REQUEST_HDG:
+                {
+                    // Read the received heading
+                    structHdg* pS = (structHdg*)&pObjData->dwData;
+                    hdg.Hdg = pS->Hdg;
+                    printf("\nHeading = %2.1f", pS->Hdg);
                 }
 
                 default:
@@ -87,25 +103,28 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
 			            // Request rudder input and GPS deviation
 		                hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_RUDDER, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                         hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                        hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                     }
 			        break;
 						
 			    case EVENT_A:
                     {
                                 // I'm the captain now
-
-                                if (gps.gpsDev <= -0.01f) {
+                                if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0) {
+                                //if (gps.gpsDev < hdg.Hdg) {
                                     ru.rudderInput = -0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
                                     hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                                 }
 
-                                else if (gps.gpsDev >= 0.01f) {
+                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0) {
                                     ru.rudderInput = 0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
                                     hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                                 }
 
                                 else {
@@ -113,6 +132,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
                                     hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                                 }
                     }
                     break;
@@ -147,7 +167,11 @@ void applicationSetup()
 
         // Set up a data definition for the GPS
         hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_GPS,
-            "GPS WP TRACK ANGLE ERROR", "radians");
+            "GPS WP BEARING", "Radians");
+
+        // Set up a data definition for the heading
+        hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_HDG,
+            "GPS GROUND TRUE HEADING", "Radians");
 
         // Run event 6x a second
         hr = SimConnect_SubscribeToSystemEvent(hSimConnect, EVENT_A, "6Hz");
