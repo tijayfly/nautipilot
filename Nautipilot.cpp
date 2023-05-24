@@ -109,8 +109,47 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
 						
 			    case EVENT_A:
                     {
-                                // I'm the captain now
-                                if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0) {
+
+                                double diff = std::abs(round(gps.gpsDev * 100.0) / 100.0 - round(hdg.Hdg * 100.0) / 100.0);
+
+                                // Big turn left
+                                if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.25) {
+                                    ru.rudderInput = -0.5;
+                                    printf("\nrudder = %2.1f", ru.rudderInput);
+                                    hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                }
+
+                                // Big turn right
+                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.25) {
+                                    ru.rudderInput = 0.5;
+                                    printf("\nrudder = %2.1f", ru.rudderInput);
+                                    hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                }
+
+                                // Med turn left
+                                else if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.1) {
+                                    ru.rudderInput = -0.25;
+                                    printf("\nrudder = %2.1f", ru.rudderInput);
+                                    hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                }
+
+                                // Med turn right
+                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.1) {
+                                    ru.rudderInput = 0.25;
+                                    printf("\nrudder = %2.1f", ru.rudderInput);
+                                    hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_GPS, DEFINITION_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                    hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
+                                }
+
+                                // Small turn left
+                                else if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.01) {
                                     ru.rudderInput = -0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -118,7 +157,8 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                     hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                                 }
 
-                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0) {
+                                // Small turn right
+                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.01) {
                                     ru.rudderInput = 0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -126,6 +166,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                     hr = SimConnect_RequestDataOnSimObject(hSimConnect, REQUEST_HDG, DEFINITION_HDG, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_ONCE);
                                 }
 
+                                // Dead on
                                 else {
                                     ru.rudderInput = 0;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
