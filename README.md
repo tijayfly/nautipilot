@@ -11,4 +11,4 @@ Download the latest release from this page, then follow the README inside. TLDR 
 This has been tested with the SS France by RM Marine, but it *should* work with all RM Marine vessels and probably most other MSFS boats/ships. Please report any issues on Discord to TiJayFLY#3732.
 
 ### Video Demo
-https://youtu.be/xw7wWjIrB-A
+https://youtu.be/kK3wTHEBt8k
