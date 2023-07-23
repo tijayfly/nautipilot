@@ -73,16 +73,16 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                 {
                     // Read the desired bearing
                     structGpsDev* pS = (structGpsDev*)&pObjData->dwData;
-                    gps.gpsDev = pS->gpsDev;
-                    printf("\nDesired bearing = %2.1f", pS->gpsDev);
+                    gps.gpsDev = pS->gpsDev * 57.3;
+                    printf("\nDesired bearing = %2.1f", gps.gpsDev);
                 }
 
                 case REQUEST_HDG:
                 {
                     // Read the received heading
                     structHdg* pS = (structHdg*)&pObjData->dwData;
-                    hdg.Hdg = pS->Hdg;
-                    printf("\nHeading = %2.1f", pS->Hdg);
+                    hdg.Hdg = pS->Hdg * 57.3;
+                    printf("\nHeading = %2.1f", hdg.Hdg);
                 }
 
                 default:
@@ -110,10 +110,10 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
 			    case EVENT_A:
                     {
 
-                                double diff = std::abs(round(gps.gpsDev * 100.0) / 100.0 - round(hdg.Hdg * 100.0) / 100.0);
+                                double diff = gps.gpsDev - hdg.Hdg;
 
                                 // Big turn left
-                                if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.25) {
+                                if (gps.gpsDev < hdg.Hdg && diff >= 0.25) {
                                     ru.rudderInput = -0.5;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -122,7 +122,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                 }
 
                                 // Big turn right
-                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.25) {
+                                else if (gps.gpsDev > hdg.Hdg && diff >= 0.25) {
                                     ru.rudderInput = 0.5;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -131,7 +131,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                 }
 
                                 // Med turn left
-                                else if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.1) {
+                                else if (gps.gpsDev < hdg.Hdg && diff >= 0.1) {
                                     ru.rudderInput = -0.25;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -140,7 +140,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                 }
 
                                 // Med turn right
-                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.1) {
+                                else if (gps.gpsDev > hdg.Hdg && diff >= 0.1) {
                                     ru.rudderInput = 0.25;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -149,7 +149,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                 }
 
                                 // Small turn left
-                                else if (round(gps.gpsDev * 100.0) / 100.0 < round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.01) {
+                                else if (gps.gpsDev < hdg.Hdg && diff >= 0.01) {
                                     ru.rudderInput = -0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -158,7 +158,7 @@ void CALLBACK MyDispatchProcTC(SIMCONNECT_RECV* pData, DWORD cbData, void *pCont
                                 }
 
                                 // Small turn right
-                                else if (round(gps.gpsDev * 100.0) / 100.0 > round(hdg.Hdg * 100.0) / 100.0 && diff >= 0.01) {
+                                else if (gps.gpsDev > hdg.Hdg && diff >= 0.01) {
                                     ru.rudderInput = 0.1;
                                     printf("\nrudder = %2.1f", ru.rudderInput);
                                     hr = SimConnect_SetDataOnSimObject(hSimConnect, DEFINITION_RUDDER, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(ru), &ru);
@@ -207,7 +207,7 @@ void applicationSetup()
 
         // Set up a data definition for the GPS
         hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_GPS,
-            "GPS WP BEARING", "Radians");
+            "GPS WP TRUE BEARING", "Radians");
 
         // Set up a data definition for the heading
         hr = SimConnect_AddToDataDefinition(hSimConnect, DEFINITION_HDG,
